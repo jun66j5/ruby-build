@@ -1,0 +1,66 @@
+---
+name: Build ruby
+
+run-name: "Build ruby: ${{ toJSON(inputs) }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: 'Ruby versions'
+        required: true
+        type: string
+        default: '3.3.5 3.2.5 3.1.4'
+      os:
+        description: 'Runs on windows-*'
+        required: true
+        type: string
+        default: '2022'
+      arch:
+        description: 'Architecture (x64 or x86)'
+        required: true
+        type: string
+        default: 'x64'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - windows-os: ${{ inputs.os }}
+            windows-arch: ${{ inputs.arch }}
+
+    runs-on: windows-${{ matrix.windows-os }}
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Build dependencies and ruby
+        env:
+          VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+          RUBY_VERSIONS: ${{ inputs.versions }}
+          ARCH: ${{ matrix.windows-arch }}
+        run: '& .\build-ruby.cmd'
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ruby-log
+          path: 'ruby-*\**\*.log'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ruby-bin-${{ matrix.windows-arch }}
+          path: 'ruby-*.7z'
