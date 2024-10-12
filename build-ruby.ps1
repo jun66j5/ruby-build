@@ -4,7 +4,8 @@ $arch = $Env:ARCH
 $triplet = "$arch-windows"
 
 Write-Output "::group::vcpkg install"
-vcpkg --triplet $triplet install libxml2 libxslt openssl readline zlib libyaml
+vcpkg --triplet $triplet install `
+    libxml2 libxslt openssl readline zlib libyaml libffi
 Write-Output '::endgroup::'
 if ($LASTEXITCODE) {
     Write-Error "vcpkg exited with $LASTEXITCODE"
