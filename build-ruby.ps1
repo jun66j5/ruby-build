@@ -36,14 +36,22 @@ foreach ($version in $ruby_versions) {
     Write-Output "::group::Build ruby $version"
     $arcfile = "$workspace\ruby-$version.tar.gz"
     $version -match '^\d+\.\d+'
+    $major, $minor = $matches[0].Split('.')
     $arcurl = "https://cache.ruby-lang.org/pub/ruby/$($matches[0])/ruby-$version.tar.gz"
     Invoke-WebRequest -Uri $arcurl -OutFile $arcfile
     & tar xzf $arcfile -C $workspace
     Set-Location -LiteralPath "$workspace\ruby-$version"
     $basename = "ruby-$version-$rubyarch"
     $prefix = "C:\$basename"
-    & win32\configure.bat "--prefix=$($prefix.replace('\', '/'))" `
-                          "--with-opt-dir=$opt_dir"
+    $configure_args = @("--prefix=$($prefix.replace('\', '/'))",
+                        "--with-opt-dir=$opt_dir")
+    if ((($major -gt 3) -or ($major -ge 3) -and ($minor -ge 4)) -and
+        (Select-String -Path win32\Makefile.sub -Quiet '^NTVER = 0x0600$'))
+    {
+        $configure_args += '--with-ntver=0x0602'
+    }
+    Write-Output "Run win32\configure.bat with $configure_args"
+    & win32\configure.bat $configure_args
     if ($LASTEXITCODE) {
         Write-Error "win32\configure.bat exited with $LASTEXITCODE"
         exit 1
