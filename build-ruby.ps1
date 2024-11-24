@@ -3,6 +3,22 @@ $ProgramFiles = $Env:ProgramFiles
 $arch = $Env:ARCH
 $triplet = "$arch-windows"
 
+Write-Output "::group::env"
+Get-ChildItem env:
+switch -Exact ($arch) {
+    'x64' {
+        $rubyarch = 'x64-mswin64'
+        $ucrtbase = 'C:\Windows\system32\ucrtbase.dll'
+    }
+    'x86' {
+        $rubyarch = 'mswin32'
+        $ucrtbase = 'C:\Windows\SysWOW64\ucrtbase.dll'
+    }
+}
+Write-Output "::group::ucrtbase.dll"
+Get-Command $ucrtbase | Format-List
+Write-Output '::endgroup::'
+
 Write-Output "::group::vcpkg install"
 vcpkg --triplet $triplet install `
     libxml2 libxslt openssl readline zlib libyaml libffi
@@ -12,15 +28,6 @@ if ($LASTEXITCODE) {
     exit 1
 }
 $vcpkg_dir = "$($Env:VCPKG_INSTALLATION_ROOT)\installed\$arch-windows"
-
-switch -Exact ($arch) {
-    'x64' {
-        $rubyarch = 'x64-mswin64'
-    }
-    'x86' {
-        $rubyarch = 'mswin32'
-    }
-}
 
 $Env:PATH = "$vcpkg_dir\bin;$($Env:PATH)"
 $opt_dir = $vcpkg_dir.replace('\', '/')
