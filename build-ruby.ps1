@@ -43,6 +43,9 @@ foreach ($version in $ruby_versions) {
     Set-Location -LiteralPath "$workspace\ruby-$version"
     $basename = "ruby-$version-$rubyarch"
     $prefix = "C:\$basename"
+    & 'C:\Program Files\Git\usr\bin\sed.exe' `
+        -i -e 's|^WARNFLAGS = -W2 |WARNFLAGS = -W3 |' `
+        win32\Makefile.sub
     $configure_args = @("--prefix=$($prefix.replace('\', '/'))",
                         "--with-opt-dir=$opt_dir")
     if ((($major -gt 3) -or ($major -ge 3) -and ($minor -ge 4)) -and
