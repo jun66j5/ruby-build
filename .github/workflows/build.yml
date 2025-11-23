@@ -61,6 +61,7 @@ jobs:
           path: 'ruby-*\**\*.log'
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ruby-bin-${{ matrix.windows-arch }}
           path: 'ruby-*.7z'
