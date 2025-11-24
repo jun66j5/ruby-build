@@ -46,6 +46,16 @@ foreach ($version in $ruby_versions) {
     & 'C:\Program Files\Git\usr\bin\sed.exe' `
         -i -e 's|^WARNFLAGS = -W2 |WARNFLAGS = -W3 |' `
         win32\Makefile.sub
+    if (!(Select-String -Path win32/mkexports.rb -Quiet -SimpleMatch `
+            'next if (/^ .*\(pick any\)$/ =~ l)...true'))
+    {
+        if (!(Test-Path -Path 72bda0f981c7136f50254c433bbfb97a953f634b.diff)) {
+            Invoke-WebRequest -Uri 'https://github.com/ruby/ruby/commit/72bda0f981c7136f50254c433bbfb97a953f634b.diff' `
+                              -OutFile 72bda0f981c7136f50254c433bbfb97a953f634b.diff
+            & 'C:\Program Files\Git\usr\bin\patch.exe' `
+                -p1 -i 72bda0f981c7136f50254c433bbfb97a953f634b.diff
+        }
+    }
     $configure_args = @("--prefix=$($prefix.replace('\', '/'))",
                         "--with-opt-dir=$opt_dir")
     if ((($major -gt 3) -or ($major -ge 3) -and ($minor -ge 4)) -and
