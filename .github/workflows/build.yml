@@ -40,19 +40,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache vcpkg files
-        uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: |
             ~\AppData\Local\vcpkg\archives
             ~\AppData\Local\vcpkg\downloads
-          key: cache-vcpkg
+          key: ${{ matrix.windows-os }}|${{ matrix.windows-arch }}|vcpkg|run${{ github.run_number }}|${{ github.run_attempt }}
+          restore-keys: |
+            ${{ matrix.windows-os }}|${{ matrix.windows-arch }}|vcpkg|run${{ github.run_number }}|
+            ${{ matrix.windows-os }}|${{ matrix.windows-arch }}|vcpkg|
 
-      - name: Build dependencies and ruby
+      - run: '& .\build-ruby.cmd'
         env:
           RUBY_VERSIONS: ${{ inputs.versions }}
           ARCH: ${{ matrix.windows-arch }}
-        run: '& .\build-ruby.cmd'
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -65,3 +66,11 @@ jobs:
         with:
           name: ruby-bin-${{ matrix.windows-arch }}
           path: 'ruby-*.7z'
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            ~\AppData\Local\vcpkg\archives
+            ~\AppData\Local\vcpkg\downloads
+          key: ${{ matrix.windows-os }}|${{ matrix.windows-arch }}|vcpkg|run${{ github.run_number }}|${{ github.run_attempt }}
